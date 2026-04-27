@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Islam — The Path of Peace | الإسلام | اردو</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+:root {
+  --gold: #c9a84c;
+  --gold-light: #e8d5a0;
+  --gold-dim: #8a6e30;
+  --ink: #07100d;
+  --deep: #0b1a12;
+  --surface: #0f2018;
+  --sage: #2e5c40;
+  --cream: #f0e8d6;
+  --cream-dim: #c4b89a;
+  --white: #faf6ee;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: var(--cream);
+  font-family: 'EB Garamond', Georgia, serif;
+  overflow-x: hidden;
+  cursor: none; /* hide default cursor entirely */
+}
+
+/* Language-specific font tuning */
+body.lang-ar, body.lang-ur {
+  font-family: 'Noto Naskh Arabic', 'EB Garamond', serif;
+}
+.lang-ar .section-title, .lang-ur .section-title {
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+.lang-ar .pillar-desc, .lang-ur .pillar-desc {
+  font-size: 14px;
+}
+
+/* ─── Custom Cursor – FIXED ─── */
+#cursor {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s ease, height 0.2s ease, background 0.2s ease;
+  will-change: left, top;
+  box-shadow: 0 0 8px rgba(201,168,76,0.8);
+}
+
+#cursor-ring {
+  position: fixed;
+  width: 42px;
+  height: 42px;
+  border: 1.5px solid var(--gold-light);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: width 0.25s ease, height 0.25s ease, border-color 0.2s;
+  will-change: left, top;
+  opacity: 0.65;
+  box-shadow: 0 0 12px rgba(201,168,76,0.3);
+  backdrop-filter: blur(1px);
+}
+
+/* cursor hover effects (applied via JS on interactive elements) */
+body.interactive-active #cursor {
+  width: 14px;
+  height: 14px;
+  background: var(--gold-light);
+}
+body.interactive-active #cursor-ring {
+  width: 56px;
+  height: 56px;
+  border-color: var(--gold);
+  opacity: 1;
+}
+
+/* ─── Three.js Canvas ─── */
+#hero-canvas {
+  position: fixed; inset: 0;
+  z-index: 0; pointer-events: none;
+}
+
+/* ─── Noise Overlay ─── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.35;
+}
+
+/* ─── Navigation with language switcher ─── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 24px 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(7,16,13,0.96), transparent);
+  backdrop-filter: blur(2px);
+}
+.nav-logo {
+  font-family: 'Noto Naskh Arabic', serif;
+  font-size: 22px; color: var(--gold);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 30px rgba(201,168,76,0.5);
+}
+.nav-right {
+  display: flex; align-items: center; gap: 32px;
+}
+.nav-links { display: flex; gap: 44px; }
+.nav-links a {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream-dim); text-decoration: none;
+  transition: color 0.3s;
+  position: relative;
+  cursor: none;
+}
+.nav-links a::after {
+  content: ''; position: absolute; bottom: -3px; left: 0; right: 100%;
+  height: 1px; background: var(--gold);
+  transition: right 0.4s cubic-bezier(0.4,0,0,1);
+}
+.nav-links a:hover { color: var(--gold-light); }
+.nav-links a:hover::after { right: 0; }
+
+/* Language Switcher */
+.lang-switcher {
+  display: flex; gap: 10px; background: rgba(7,16,13,0.7); padding: 6px 12px;
+  border-radius: 40px; border: 1px solid rgba(201,168,76,0.3);
+  backdrop-filter: blur(4px);
+}
+.lang-btn {
+  background: transparent; border: none; color: var(--cream-dim);
+  font-family: 'Cormorant Garamond', serif; font-size: 12px;
+  font-weight: 400; letter-spacing: 1px; cursor: none;
+  padding: 4px 12px;
+  border-radius: 30px; transition: all 0.3s;
+}
+.lang-btn.active {
+  background: var(--gold); color: var(--ink); font-weight: 600;
+  box-shadow: 0 0 12px rgba(201,168,76,0.6);
+}
+.lang-btn:hover:not(.active) { color: var(--gold-light); }
+
+/* Hero */
+#hero {
+  position: relative; z-index: 2;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 120px 40px 80px;
+}
+
+.bismillah {
+  font-family: 'Noto Naskh Arabic', serif;
+  font-size: clamp(28px, 5vw, 52px);
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 60px rgba(201,168,76,0.4);
+  opacity: 0;
+  animation: fadeDown 1.2s 0.3s forwards;
+  margin-bottom: 32px;
+}
+
+.hero-eyebrow {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--gold-dim); margin-bottom: 20px;
+  opacity: 0; animation: fadeUp 1s 0.8s forwards;
+}
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(52px, 10vw, 120px);
+  font-weight: 300; line-height: 0.95;
+  color: var(--white);
+  letter-spacing: -0.02em;
+  opacity: 0; animation: fadeUp 1.2s 1s forwards;
+  margin-bottom: 28px;
+}
+.hero-title em {
+  font-style: italic; color: var(--gold-light);
+  display: block;
+}
+
+.hero-sub {
+  font-size: clamp(16px, 2.5vw, 20px);
+  color: var(--cream-dim);
+  max-width: 560px; line-height: 1.7;
+  opacity: 0; animation: fadeUp 1s 1.4s forwards;
+  font-style: italic;
+}
+
+.hero-scroll {
+  position: absolute; bottom: 40px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  opacity: 0; animation: fadeUp 1s 2.2s forwards;
+}
+.hero-scroll span {
+  font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--gold-dim);
+}
+.scroll-line {
+  width: 1px; height: 50px;
+  background: linear-gradient(to bottom, var(--gold-dim), transparent);
+  animation: scrollPulse 2s infinite;
+}
+
+/* Divider */
+.ornament {
+  text-align: center; padding: 20px 0;
+  color: var(--gold-dim); font-size: 22px;
+  letter-spacing: 0.5em;
+  position: relative; z-index: 2;
+}
+
+/* Sections */
+section {
+  position: relative; z-index: 2;
+  padding: 120px 60px;
+  max-width: 1200px; margin: 0 auto;
+}
+.section-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 10px; letter-spacing: 0.4em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 24px;
+  display: flex; align-items: center; gap: 14px;
+}
+.section-label::before {
+  content: ''; width: 30px; height: 1px; background: var(--gold);
+}
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(36px, 6vw, 72px);
+  font-weight: 300; line-height: 1.1;
+  color: var(--white); margin-bottom: 40px;
+}
+.section-title em { font-style: italic; color: var(--gold-light); }
+
+/* Pillars */
+.pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  margin-top: 60px;
+}
+.pillar-card {
+  background: rgba(15,32,24,0.8);
+  border: 1px solid rgba(201,168,76,0.12);
+  padding: 40px 24px;
+  text-align: center;
+  transition: transform 0.5s cubic-bezier(0.2,0,0,1), border-color 0.4s;
+  cursor: none;
+}
+.pillar-card:hover { transform: translateY(-8px); border-color: rgba(201,168,76,0.4); }
+.pillar-arabic {
+  font-family: 'Noto Naskh Arabic', serif;
+  font-size: 32px; color: var(--gold);
+  margin-bottom: 16px; display: block;
+}
+.pillar-name, .belief-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; }
+.pillar-name { font-size: 22px; color: var(--white); margin-bottom: 14px; }
+.pillar-desc, .belief-body { font-size: 13px; line-height: 1.7; color: var(--cream-dim); }
+
+/* Quran block */
+.quran-block {
+  background: linear-gradient(135deg, rgba(15,32,24,0.9), rgba(11,26,18,0.95));
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 4px;
+  padding: 80px;
+  text-align: center;
+  margin: 80px 0;
+  position: relative;
+  cursor: none;
+}
+.quran-arabic {
+  font-family: 'Noto Naskh Arabic', serif;
+  font-size: clamp(22px, 3.5vw, 38px);
+  color: var(--gold-light);
+  line-height: 1.8; margin-bottom: 28px;
+}
+.quran-translation, .quran-ref {
+  font-style: italic;
+}
+.quran-translation { font-size: clamp(16px, 2vw, 22px); color: var(--cream-dim); margin-bottom: 20px; }
+.quran-ref { font-size: 12px; letter-spacing: 0.25em; color: var(--gold-dim); }
+
+/* Beliefs */
+.beliefs-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 24px; margin-top: 60px;
+}
+.belief-card {
+  background: rgba(15,32,24,0.6);
+  border: 1px solid rgba(201,168,76,0.1);
+  padding: 40px;
+  transition: border-color 0.4s, transform 0.4s;
+  cursor: none;
+}
+.belief-card:hover { border-color: rgba(201,168,76,0.35); transform: translateY(-4px); }
+.belief-title { font-size: 26px; color: var(--gold-light); margin-bottom: 14px; }
+
+/* Timeline */
+.timeline {
+  position: relative; padding-left: 60px;
+  border-left: 1px solid rgba(201,168,76,0.2);
+  margin-top: 60px;
+}
+.timeline-item {
+  position: relative; margin-bottom: 60px;
+  opacity: 0; transform: translateX(-20px);
+  transition: opacity 0.7s, transform 0.7s;
+  cursor: none;
+}
+.timeline-item.visible { opacity: 1; transform: none; }
+.timeline-dot {
+  position: absolute; left: -68px; top: 4px;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1px solid var(--gold);
+  background: var(--ink);
+}
+.timeline-year { font-size: 11px; letter-spacing: 0.3em; color: var(--gold); margin-bottom: 10px; }
+.timeline-title { font-size: 28px; font-weight: 400; color: var(--white); margin-bottom: 12px; }
+
+/* Stats */
+.stats-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.1);
+  margin: 80px 0;
+}
+.stat-cell {
+  background: rgba(11,26,18,0.95);
+  padding: 60px 40px; text-align: center;
+  cursor: none;
+}
+.stat-num { font-family: 'Cormorant Garamond', serif; font-size: clamp(48px, 7vw, 88px); font-weight: 300; color: var(--gold); }
+.stat-label { font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-dim); }
+
+footer {
+  position: relative; z-index: 2;
+  padding: 80px 60px 40px;
+  border-top: 1px solid rgba(201,168,76,0.12);
+  text-align: center;
+}
+.footer-arabic { font-family: 'Noto Naskh Arabic', serif; font-size: 36px; color: var(--gold); margin-bottom: 20px; }
+
+/* reveal */
+.reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.9s, transform 0.9s; }
+.reveal.visible { opacity: 1; transform: none; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes scrollPulse { 0%,100%{opacity:0.3;transform:scaleY(0.8);} 50%{opacity:1;transform:scaleY(1);} }
+
+@media (max-width: 900px) {
+  .pillars-grid { grid-template-columns: 1fr 1fr; }
+  .beliefs-grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: 1fr; }
+  nav { padding: 20px 24px; }
+  .nav-links { gap: 24px; }
+  section { padding: 80px 24px; }
+  .quran-block { padding: 40px 24px; }
+}
+@media (max-width: 600px) {
+  .pillars-grid { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+  .lang-switcher { padding: 4px 8px; }
+}
+#geo-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.08; }
+#particles { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+@keyframes float { 0% { transform: translateY(0) scale(1); opacity:0; } 10%{opacity:1;} 90%{opacity:0.5;} 100%{transform:translateY(-100vh) scale(0.5); opacity:0;} }
+</style>
+</head>
+<body class="lang-en">
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="hero-canvas"></canvas>
+<canvas id="geo-canvas"></canvas>
+<div id="particles"></div>
+
+<nav>
+  <div class="nav-logo" id="nav-logo">الإسلام</div>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="#pillars" data-i18n="nav_pillars">Pillars</a>
+      <a href="#beliefs" data-i18n="nav_beliefs">Beliefs</a>
+      <a href="#history" data-i18n="nav_history">History</a>
+      <a href="#quran" data-i18n="nav_quran">Quran</a>
+    </div>
+    <div class="lang-switcher">
+      <button class="lang-btn" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="ur">اردو</button>
+      <button class="lang-btn" data-lang="ar">العربية</button>
+    </div>
+  </div>
+</nav>
+
+<div id="hero">
+  <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+  <div class="hero-eyebrow" id="hero-eyebrow">In the name of God, the Most Gracious, the Most Merciful</div>
+  <h1 class="hero-title">Islam<br><em id="hero-title-em">The Path of Peace</em></h1>
+  <p class="hero-sub" id="hero-sub">A complete way of life — a civilization of knowledge, mercy, and submission to the One who created all that exists.</p>
+  <div class="hero-scroll"><span id="scroll-text">Explore</span><div class="scroll-line"></div></div>
+</div>
+<div class="ornament full-bleed">✦ ✦ ✦</div>
+
+<div class="stats-row full-bleed reveal">
+  <div class="stat-cell"><div class="stat-num" data-target="1900">0</div><div class="stat-label" id="stat1">Million Muslims Worldwide</div></div>
+  <div class="stat-cell"><div class="stat-num" data-target="114">0</div><div class="stat-label" id="stat2">Chapters in the Holy Quran</div></div>
+  <div class="stat-cell"><div class="stat-num" data-target="1400">0</div><div class="stat-label" id="stat3">Years of Civilization</div></div>
+</div>
+
+<section id="pillars"><div class="section-label reveal" id="pillars-label">The Foundation</div>
+  <h2 class="section-title reveal">The Five <em id="pillars-title-em">Pillars</em><br><span id="pillars-sub">of Islam</span></h2>
+  <p class="reveal" id="pillars-intro" style="font-size:18px;color:var(--cream-dim);max-width:560px;line-height:1.8;font-style:italic;">The five pillars are the essential acts of worship that form the core of Muslim life. They are the framework through which a believer draws closer to Allah.</p>
+  <div class="pillars-grid">
+    <div class="pillar-card reveal"><span class="pillar-arabic">الشَّهَادَة</span><div class="pillar-name" id="p1-name">Shahada</div><div class="pillar-desc" id="p1-desc">The declaration of faith: "There is no god but Allah, and Muhammad is His messenger."</div></div>
+    <div class="pillar-card reveal"><span class="pillar-arabic">الصَّلَاة</span><div class="pillar-name" id="p2-name">Salah</div><div class="pillar-desc" id="p2-desc">Five daily prayers performed at dawn, midday, afternoon, sunset, and night — orienting the heart toward Mecca.</div></div>
+    <div class="pillar-card reveal"><span class="pillar-arabic">الزَّكَاة</span><div class="pillar-name" id="p3-name">Zakat</div><div class="pillar-desc" id="p3-desc">Mandatory almsgiving — 2.5% of savings given to the needy each year, purifying wealth and nurturing community.</div></div>
+    <div class="pillar-card reveal"><span class="pillar-arabic">الصَّوْم</span><div class="pillar-name" id="p4-name">Sawm</div><div class="pillar-desc" id="p4-desc">Fasting during Ramadan — abstaining from food, drink, and ill conduct from dawn to sunset for an entire month.</div></div>
+    <div class="pillar-card reveal"><span class="pillar-arabic">الْحَجّ</span><div class="pillar-name" id="p5-name">Hajj</div><div class="pillar-desc" id="p5-desc">The pilgrimage to Mecca — an obligation once in a lifetime for those able, uniting millions in profound humility before God.</div></div>
+  </div>
+</section>
+<div class="ornament full-bleed">✦ ✦ ✦</div>
+
+<section id="quran" style="padding: 40px 60px;">
+  <div class="quran-block reveal"><div class="quran-arabic">إِنَّ مَعَ الْعُسْرِ يُسْرًا</div><p class="quran-translation" id="quran1-text">"Indeed, with every hardship comes ease."</p><div class="quran-ref" id="quran1-ref">Surah Ash-Sharh • 94:6</div></div>
+  <div class="quran-block reveal" style="margin-top:0"><div class="quran-arabic">وَلَقَدْ كَرَّمْنَا بَنِي آدَمَ</div><p class="quran-translation" id="quran2-text">"And We have certainly honoured the children of Adam."</p><div class="quran-ref" id="quran2-ref">Surah Al-Isra • 17:70</div></div>
+</section>
+
+<section id="beliefs"><div class="section-label reveal" id="beliefs-label">Aqeedah</div><h2 class="section-title reveal">The Six <em id="beliefs-title-em">Articles</em><br><span id="beliefs-sub">of Faith</span></h2>
+  <div class="beliefs-grid">
+    <div class="belief-card reveal"><div class="belief-title" id="b1-title">Belief in Allah</div><p class="belief-body" id="b1-desc">Absolute monotheism — Tawhid — the conviction that Allah alone is God, unique, without partner, equal, or offspring. He is Al-Ahad: The One.</p></div>
+    <div class="belief-card reveal"><div class="belief-title" id="b2-title">Belief in the Angels</div><p class="belief-body" id="b2-desc">Angels are light-formed beings who carry out Allah's commands — Jibril, Mikail, Israfil — unseen servants of divine order.</p></div>
+    <div class="belief-card reveal"><div class="belief-title" id="b3-title">Belief in the Holy Books</div><p class="belief-body" id="b3-desc">The Quran, the Torah, the Psalms, and the Gospel — divine revelations sent to guide humanity across the ages. The Quran is the final, preserved word.</p></div>
+    <div class="belief-card reveal"><div class="belief-title" id="b4-title">Belief in the Prophets</div><p class="belief-body" id="b4-desc">From Adam to Muhammad ﷺ — 124,000 messengers chosen to deliver God's guidance. Muhammad ﷺ is the Seal of Prophethood.</p></div>
+    <div class="belief-card reveal"><div class="belief-title" id="b5-title">Belief in the Day of Judgement</div><p class="belief-body" id="b5-desc">Every soul shall be resurrected and held accountable before Allah — a day when justice is absolute and mercy is vast.</p></div>
+    <div class="belief-card reveal"><div class="belief-title" id="b6-title">Belief in Divine Decree</div><p class="belief-body" id="b6-desc">Qadr — the certainty that Allah's knowledge encompasses all things, and that both good and hardship are within His wise plan.</p></div>
+  </div>
+</section>
+
+<section id="history"><div class="section-label reveal" id="history-label">Al-Tarikh</div><h2 class="section-title reveal">A Civilization<br>of <em id="history-em">Light & Knowledge</em></h2>
+  <div class="timeline">
+    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">610 CE</div><div class="timeline-title" id="tl1-title">The First Revelation</div><p class="timeline-body" id="tl1-text">In the Cave of Hira, Angel Jibril descended upon Muhammad ﷺ with the first verses of the Quran: "Read in the name of your Lord who created." A new dawn for humanity had arrived.</p></div>
+    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">622 CE</div><div class="timeline-title" id="tl2-title">The Hijra — The Migration</div><p class="timeline-body" id="tl2-text">The Prophet ﷺ and his companions migrated from Mecca to Medina, establishing the first Muslim community and marking Year 1 of the Islamic calendar.</p></div>
+    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">632 CE</div><div class="timeline-title" id="tl3-title">The Farewell Sermon</div><p class="timeline-body" id="tl3-text">From the plains of Arafat, the Prophet ﷺ delivered his final sermon: "All mankind is from Adam and Eve. An Arab has no superiority over a non-Arab."</p></div>
+    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">8th–13th C</div><div class="timeline-title" id="tl4-title">The Golden Age of Islam</div><p class="timeline-body" id="tl4-text">Muslim scholars pioneered algebra, astronomy, medicine, and philosophy. Baghdad's House of Wisdom preserved knowledge — lighting Europe's path out of the Dark Ages.</p></div>
+    <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">Today</div><div class="timeline-title" id="tl5-title">1.9 Billion Voices</div><p class="timeline-body" id="tl5-text">Islam is the world's second-largest religion, practiced across every continent — a living, breathing community bound not by race, but by faith, prayer, and love for the Divine.</p></div>
+  </div>
+</section>
+<div class="ornament full-bleed" style="margin: 40px 0;">✦ ✦ ✦</div>
+<footer><div class="footer-arabic">سُبْحَانَ اللَّه</div><div class="footer-sub" id="footer-text">Glory be to God · Islam — The Path of Peace · 2025</div></footer>
+
+<script>
+// ---- LOCALIZATION DICTIONARY ----
+const translations = {
+  en: { nav_pillars:"Pillars", nav_beliefs:"Beliefs", nav_history:"History", nav_quran:"Quran", hero_eyebrow:"In the name of God, the Most Gracious, the Most Merciful", hero_title_em:"The Path of Peace", hero_sub:"A complete way of life — a civilization of knowledge, mercy, and submission to the One who created all that exists.", scroll_text:"Explore", stat1:"Million Muslims Worldwide", stat2:"Chapters in the Holy Quran", stat3:"Years of Civilization", pillars_label:"The Foundation", pillars_title_em:"Pillars", pillars_sub:"of Islam", pillars_intro:"The five pillars are the essential acts of worship that form the core of Muslim life. They are the framework through which a believer draws closer to Allah.", p1_name:"Shahada", p1_desc:"The declaration of faith: \"There is no god but Allah, and Muhammad is His messenger.\"", p2_name:"Salah", p2_desc:"Five daily prayers performed at dawn, midday, afternoon, sunset, and night — orienting the heart toward Mecca.", p3_name:"Zakat", p3_desc:"Mandatory almsgiving — 2.5% of savings given to the needy each year, purifying wealth and nurturing community.", p4_name:"Sawm", p4_desc:"Fasting during Ramadan — abstaining from food, drink, and ill conduct from dawn to sunset for an entire month.", p5_name:"Hajj", p5_desc:"The pilgrimage to Mecca — an obligation once in a lifetime for those able, uniting millions in profound humility before God.", quran1_text:"\"Indeed, with every hardship comes ease.\"", quran1_ref:"Surah Ash-Sharh • 94:6", quran2_text:"\"And We have certainly honoured the children of Adam.\"", quran2_ref:"Surah Al-Isra • 17:70", beliefs_label:"Aqeedah", beliefs_title_em:"Articles", beliefs_sub:"of Faith", b1_title:"Belief in Allah", b1_desc:"Absolute monotheism — Tawhid — the conviction that Allah alone is God, unique, without partner, equal, or offspring. He is Al-Ahad: The One.", b2_title:"Belief in the Angels", b2_desc:"Angels are light-formed beings who carry out Allah's commands — Jibril, Mikail, Israfil — unseen servants of divine order.", b3_title:"Belief in the Holy Books", b3_desc:"The Quran, the Torah, the Psalms, and the Gospel — divine revelations sent to guide humanity across the ages. The Quran is the final, preserved word.", b4_title:"Belief in the Prophets", b4_desc:"From Adam to Muhammad ﷺ — 124,000 messengers chosen to deliver God's guidance. Muhammad ﷺ is the Seal of Prophethood.", b5_title:"Belief in the Day of Judgement", b5_desc:"Every soul shall be resurrected and held accountable before Allah — a day when justice is absolute and mercy is vast.", b6_title:"Belief in Divine Decree", b6_desc:"Qadr — the certainty that Allah's knowledge encompasses all things, and that both good and hardship are within His wise plan.", history_label:"Al-Tarikh", history_em:"Light & Knowledge", tl1_title:"The First Revelation", tl1_text:"In the Cave of Hira, Angel Jibril descended upon Muhammad ﷺ with the first verses of the Quran: \"Read in the name of your Lord who created.\" A new dawn for humanity had arrived.", tl2_title:"The Hijra — The Migration", tl2_text:"The Prophet ﷺ and his companions migrated from Mecca to Medina, establishing the first Muslim community and marking Year 1 of the Islamic calendar.", tl3_title:"The Farewell Sermon", tl3_text:"From the plains of Arafat, the Prophet ﷺ delivered his final sermon: \"All mankind is from Adam and Eve. An Arab has no superiority over a non-Arab.\"", tl4_title:"The Golden Age of Islam", tl4_text:"Muslim scholars pioneered algebra, astronomy, medicine, and philosophy. Baghdad's House of Wisdom preserved knowledge — lighting Europe's path out of the Dark Ages.", tl5_title:"1.9 Billion Voices", tl5_text:"Islam is the world's second-largest religion, practiced across every continent — a living community bound by faith, prayer, and love for the Divine.", footer_text:"Glory be to God · Islam — The Path of Peace · 2025" },
+  ar: { nav_pillars:"الأركان", nav_beliefs:"العقائد", nav_history:"التاريخ", nav_quran:"القرآن", hero_eyebrow:"بسم الله الرحمن الرحيم", hero_title_em:"طريق السلام", hero_sub:"منهج حياة كامل — حضارة العلم والرحمة والخضوع للواحد الذي خلق كل ما يوجد.", scroll_text:"استكشف", stat1:"مليون مسلم حول العالم", stat2:"سورة في القرآن الكريم", stat3:"عامًا من الحضارة", pillars_label:"الأساس", pillars_title_em:"أركان", pillars_sub:"الإسلام", pillars_intro:"أركان الإسلام الخمسة هي العبادات الأساسية التي تشكل جوهر حياة المسلم.", p1_name:"الشهادة", p1_desc:"إعلان الإيمان: \"لا إله إلا الله، محمد رسول الله\"", p2_name:"الصلاة", p2_desc:"الصلوات الخمس اليومية عند الفجر والظهر والعصر والمغرب والعشاء.", p3_name:"الزكاة", p3_desc:"الزكاة المفروضة — 2.5% من المدخرات تُعطى للمحتاجين.", p4_name:"الصوم", p4_desc:"صيام رمضان — الامتناع عن الطعام والشراب من الفجر حتى غروب الشمس.", p5_name:"الحج", p5_desc:"الحج إلى مكة — واجب مرة واحدة في العمر لمن استطاع إليه سبيلاً.", quran1_text:"\"إن مع العسر يسرا\"", quran1_ref:"سورة الشرح • ٩٤:٦", quran2_text:"\"ولقد كرمنا بني آدم\"", quran2_ref:"سورة الإسراء • ١٧:٧٠", beliefs_label:"العقيدة", beliefs_title_em:"أركان", beliefs_sub:"الإيمان", b1_title:"الإيمان بالله", b1_desc:"التوحيد المطلق — إيمان بأن الله وحده إله.", b2_title:"الإيمان بالملائكة", b2_desc:"الملائكة كائنات نورانية تنفذ أوامر الله.", b3_title:"الإيمان بالكتب", b3_desc:"القرآن، التوراة، الزبور، الإنجيل — وحي إلهي.", b4_title:"الإيمان بالأنبياء", b4_desc:"من آدم إلى محمد ﷺ — 124,000 رسول.", b5_title:"الإيمان باليوم الآخر", b5_desc:"كل نفس ستبعث وتحاسب أمام الله.", b6_title:"الإيمان بالقدر", b6_desc:"القدر — يقين بأن علم الله محيط بكل شيء.", history_label:"التاريخ", history_em:"النور والمعرفة", tl1_title:"الوحي الأول", tl1_text:"في غار حراء، نزل جبريل على محمد ﷺ بأول آيات القرآن.", tl2_title:"الهجرة", tl2_text:"هاجر النبي ﷺ وأصحابه إلى المدينة.", tl3_title:"خطبة الوداع", tl3_text:"خطبة الوداع: لا فضل لعربي على عجمي.", tl4_title:"العصر الذهبي", tl4_text:"رواد مسلمون في الفلك والطب والفلسفة.", tl5_title:"١.٩ مليار صوت", tl5_text:"الإسلام ثاني أكبر دين في العالم.", footer_text:"سبحان الله · الإسلام — طريق السلام · ٢٠٢٥" },
+  ur: { nav_pillars:"ارکان", nav_beliefs:"عقائد", nav_history:"تاریخ", nav_quran:"قرآن", hero_eyebrow:"اللہ کے نام سے جو رحمٰن و رحیم ہے", hero_title_em:"امن کا راستہ", hero_sub:"زندگی کا مکمل نظام — علم، رحمت اور اس ذات کے سامنے سر تسلیم خم کرنے کی تہذیب۔", scroll_text:"دریافت کریں", stat1:"کروڑ مسلمان دنیا بھر میں", stat2:"قرآن کی سورتیں", stat3:"سال کی تہذیب", pillars_label:"بنیاد", pillars_title_em:"ارکان", pillars_sub:"اسلام", pillars_intro:"پانچ ارکان وہ ضروری عبادات ہیں جو مسلم زندگی کا مرکز ہیں۔", p1_name:"شہادت", p1_desc:"ایمان کا اعلان: \"اللہ کے سوا کوئی معبود نہیں، محمد اس کے رسول ہیں۔\"", p2_name:"نماز", p2_desc:"پانچ وقت کی نمازیں — فجر، ظہر، عصر، مغرب، عشاء۔", p3_name:"زکوٰۃ", p3_desc:"فرضی صدقہ — بچت کا ۲.۵ فیصد سالانہ ضرورت مندوں کو دینا۔", p4_name:"روزہ", p4_desc:"رمضان المبارک میں روزے رکھنا — طلوع فجر سے غروب آفتاب تک۔", p5_name:"حج", p5_desc:"مکہ کا سفر — زندگی میں ایک بار استطاعت رکھنے والوں پر فرض۔", quran1_text:"\"یقیناً مشکل کے ساتھ آسانی ہے\"", quran1_ref:"سورہ الم نشرح • ۹۴:۶", quran2_text:"\"اور ہم نے بنی آدم کو عزت دی\"", quran2_ref:"سورہ الاسراء • ۱۷:۷۰", beliefs_label:"عقیدہ", beliefs_title_em:"چھے", beliefs_sub:"ایمان", b1_title:"اللہ پر ایمان", b1_desc:"توحید — یقین کہ اللہ ہی معبود برحق۔", b2_title:"فرشتوں پر ایمان", b2_desc:"فرشتے نورانی مخلوق ہیں جو اللہ کے حکم پر عمل کرتے ہیں۔", b3_title:"کتب پر ایمان", b3_desc:"قرآن، تورات، زبور، انجیل — الہامی کتابیں۔", b4_title:"انبیاء پر ایمان", b4_desc:"آدم سے محمد ﷺ تک — ۱۲۴۰۰۰ رسول۔", b5_title:"قیامت پر ایمان", b5_desc:"ہر نفس دوبارہ اٹھایا جائے گا اور اللہ کے سامنے جوابدہ ہوگا۔", b6_title:"تقدیر پر ایمان", b6_desc:"قدر — یقین کہ اللہ کا علم سب کچھ احاطہ کیے ہوئے ہے۔", history_label:"التاریخ", history_em:"روشنی اور علم", tl1_title:"پہلی وحی", tl1_text:"غار حرا میں جبرائیل ﷺ پر اترے: \"اپنے رب کے نام سے پڑھ\"۔", tl2_title:"ہجرت", tl2_text:"نبی کریم ﷺ اور صحابہ مکہ سے مدینہ ہجرت کر گئے۔", tl3_title:"حجۃ الوداع", tl3_text:"میدان عرفات میں خطبہ: \"کسی عربی کو غیر عربی پر کوئی فضیلت نہیں۔\"", tl4_title:"اسلامی عہد زریں", tl4_text:"مسلم اسکالرز نے الجبرا، فلکیات، طب اور فلسفہ میں پیش قدمی کی۔", tl5_title:"۱.۹ ارب آوازیں", tl5_text:"اسلام دنیا کا دوسرا بڑا مذہب، ہر براعظم میں پھیلا ہوا۔", footer_text:"سبحان اللہ · اسلام — امن کا راستہ · ۲۰۲۵" }
+};
+
+function setLanguage(lang) {
+  document.body.className = `lang-${lang}`;
+  document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+  const t = translations[lang];
+  if(!t) return;
+  Object.keys(t).forEach(key => { let el = document.getElementById(key); if(el) el.innerText = t[key]; else document.querySelectorAll(`[data-i18n="${key}"]`).forEach(e => e.innerText = t[key]); });
+  document.getElementById('hero-title-em').innerText = t.hero_title_em;
+  document.getElementById('hero-sub').innerText = t.hero_sub;
+  document.getElementById('hero-eyebrow').innerText = t.hero_eyebrow;
+  document.getElementById('scroll-text').innerText = t.scroll_text;
+  document.getElementById('stat1').innerText = t.stat1;
+  document.getElementById('stat2').innerText = t.stat2;
+  document.getElementById('stat3').innerText = t.stat3;
+  document.getElementById('pillars-label').innerText = t.pillars_label;
+  document.getElementById('pillars-title-em').innerText = t.pillars_title_em;
+  document.getElementById('pillars-sub').innerText = t.pillars_sub;
+  document.getElementById('pillars-intro').innerText = t.pillars_intro;
+  for(let i=1;i<=5;i++){ document.getElementById(`p${i}-name`).innerText = t[`p${i}_name`]; document.getElementById(`p${i}-desc`).innerText = t[`p${i}_desc`]; }
+  document.getElementById('quran1-text').innerText = t.quran1_text; document.getElementById('quran1-ref').innerText = t.quran1_ref;
+  document.getElementById('quran2-text').innerText = t.quran2_text; document.getElementById('quran2-ref').innerText = t.quran2_ref;
+  document.getElementById('beliefs-label').innerText = t.beliefs_label; document.getElementById('beliefs-title-em').innerText = t.beliefs_title_em; document.getElementById('beliefs-sub').innerText = t.beliefs_sub;
+  for(let i=1;i<=6;i++){ document.getElementById(`b${i}-title`).innerText = t[`b${i}_title`]; document.getElementById(`b${i}-desc`).innerText = t[`b${i}_desc`]; }
+  document.getElementById('history-label').innerText = t.history_label; document.getElementById('history-em').innerText = t.history_em;
+  for(let i=1;i<=5;i++){ document.getElementById(`tl${i}-title`).innerText = t[`tl${i}_title`]; document.getElementById(`tl${i}-text`).innerText = t[`tl${i}_text`]; }
+  document.getElementById('footer-text').innerText = t.footer_text;
+  document.getElementById('nav-logo').innerText = (lang==='ar'?'الإسلام':(lang==='ur'?'اسلام':'Islam'));
+}
+document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', () => setLanguage(btn.dataset.lang)));
+setLanguage('en');
+
+// ========== FIXED CURSOR LOGIC ==========
+const cursorDot = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+let mouseX = 0, mouseY = 0;
+let ringX = 0, ringY = 0;
+
+document.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  // dot follows exactly
+  cursorDot.style.left = mouseX + 'px';
+  cursorDot.style.top = mouseY + 'px';
+});
+
+// smooth ring follow with lerp
+function animateRing() {
+  ringX += (mouseX - ringX) * 0.15;
+  ringY += (mouseY - ringY) * 0.15;
+  cursorRing.style.left = ringX + 'px';
+  cursorRing.style.top = ringY + 'px';
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+
+// Hover effect on interactive elements
+const interactiveElements = document.querySelectorAll('a, button, .pillar-card, .belief-card, .quran-block, .stat-cell, .timeline-item, .lang-btn');
+const enableHover = () => document.body.classList.add('interactive-active');
+const disableHover = () => document.body.classList.remove('interactive-active');
+interactiveElements.forEach(el => {
+  el.addEventListener('mouseenter', enableHover);
+  el.addEventListener('mouseleave', disableHover);
+});
+// also for nav-links
+document.querySelectorAll('.nav-links a').forEach(a => { a.addEventListener('mouseenter', enableHover); a.addEventListener('mouseleave', disableHover); });
+// remove lag: ensure cursor never hidden
+document.body.style.cursor = 'none';
+
+// Three.js and remaining features (keep existing performances)
+(function initThree() { const canvas = document.getElementById('hero-canvas'); const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); renderer.setSize(window.innerWidth, window.innerHeight); const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight,0.1,100); camera.position.z=5; const geo = new THREE.IcosahedronGeometry(2.2,2); const mat = new THREE.MeshBasicMaterial({ color:0xc9a84c, wireframe:true, transparent:true, opacity:0.08 }); const sphere = new THREE.Mesh(geo,mat); scene.add(sphere); const geo2 = new THREE.IcosahedronGeometry(1.4,1); const sphere2 = new THREE.Mesh(geo2, new THREE.MeshBasicMaterial({ color:0xe8d5a0, wireframe:true, transparent:true, opacity:0.04 })); scene.add(sphere2); const starGeo = new THREE.BufferGeometry(); const starPos = new Float32Array(800*3); for(let i=0;i<800*3;i++) starPos[i]=(Math.random()-0.5)*30; starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3)); const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color:0xc9a84c, size:0.025, transparent:true, opacity:0.4 })); scene.add(stars); let scrollY=0; window.addEventListener('scroll',()=>{ scrollY=window.scrollY; }); window.addEventListener('resize',()=>{ camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth,window.innerHeight); }); let mx3=0,my3=0; document.addEventListener('mousemove',e=>{ mx3=(e.clientX/window.innerWidth-0.5)*0.5; my3=(e.clientY/window.innerHeight-0.5)*0.5; }); function renderFrame(){ requestAnimationFrame(renderFrame); const t=Date.now()*0.0003; sphere.rotation.x=t*0.3+my3; sphere.rotation.y=t*0.5+mx3; sphere2.rotation.x=-t*0.4; sphere2.rotation.y=-t*0.6; stars.rotation.y=t*0.05; camera.position.y=-scrollY*0.002; renderer.render(scene,camera); } renderFrame(); })();
+(function initGeoCanvas(){ const c=document.getElementById('geo-canvas'),ctx=c.getContext('2d'); function draw(){ c.width=window.innerWidth; c.height=window.innerHeight; ctx.clearRect(0,0,c.width,c.height); const sz=120; for(let r=-1; r<Math.ceil(c.height/sz)+2; r++) for(let cr=-1; cr<Math.ceil(c.width/sz)+2; cr++){ const cx=cr*sz+(r%2===0?0:sz/2), cy=r*sz*0.866; ctx.beginPath(); for(let i=0;i<16;i++){ const ang=(i/16)*Math.PI*2-Math.PI/2; const rad=i%2===0? sz*0.38: sz*0.15; const x=cx+Math.cos(ang)*rad, y=cy+Math.sin(ang)*rad; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); } ctx.closePath(); ctx.strokeStyle='#c9a84c'; ctx.lineWidth=0.5; ctx.globalAlpha=0.4; ctx.stroke(); } } draw(); window.addEventListener('resize',draw); })();
+for(let i=0;i<32;i++){ const p=document.createElement('div'); const s=Math.random()*3+1; p.style.cssText=`position:absolute; left:${Math.random()*100}%; bottom:-10px; width:${s}px; height:${s}px; border-radius:50%; background:rgba(201,168,76,${Math.random()*0.5}); animation:float ${Math.random()*20+15}s ${Math.random()*20}s linear infinite;`; document.getElementById('particles').appendChild(p); }
+const revealObs = new IntersectionObserver(e=>e.forEach(entry=>entry.isIntersecting&&entry.target.classList.add('visible')),{threshold:0.12});
+document.querySelectorAll('.reveal, .timeline-item').forEach(el=>revealObs.observe(el));
+const counterObs = new IntersectionObserver((entries)=>{ entries.forEach(entry=>{ if(entry.isIntersecting){ const el=entry.target; const target=parseInt(el.dataset.target); const start=Date.now(); (function tick(){ const p=Math.min((Date.now()-start)/2000,1); el.textContent=Math.round((1-Math.pow(1-p,3))*target).toLocaleString(); if(p<1) requestAnimationFrame(tick); })(); counterObs.unobserve(el); } }); },{threshold:0.5});
+document.querySelectorAll('[data-target]').forEach(c=>counterObs.observe(c));
+</script>
+</body>
+</html>
